@@ -6,16 +6,58 @@ import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
-import IconButton from "@mui/material/IconButton";
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
-import { Tooltip } from "@mui/material";
-import { useState } from "react";
-import CancelIcon from "@mui/icons-material/Cancel";
-import CheckIcon from "@mui/icons-material/Check";
+import { TablePagination } from "@mui/material";
+import { useEffect, useState } from "react";
 import Checkbox from "@mui/material/Checkbox";
 
-export default function YearTable() {
+export interface TDataBaseFileName {
+  dbName: string;
+  description: string;
+  id: number;
+  year: number;
+  checked:boolean
+}
+
+export interface Data {
+  data: TDataBaseFileName[]
+}
+
+export default function YearTable({ data }: Data) {
+  const [TableData , setTableData] = useState<any>()
+  const [Rows, setRows] = useState(0);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  useEffect(() => {
+    setRows(data.length);
+    setTableData(data)
+  }, [data]);
+
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setRowsPerPage(+event.target.value);
+    setPage(0);
+  };
+
+  const setChecked = (id:number | string)=>{
+    const newData = TableData.map((i:TDataBaseFileName) => {
+      if(i.id == id){
+        if(i.checked){
+          i.checked = false
+        }else{
+          i.checked = true
+        }
+      }
+      return i
+    })
+    setTableData(newData);
+  }
+
   return (
     <Paper sx={{ width: "100%", minWidth: "100%", overflow: "auto" }}>
       <TableContainer sx={{ maxHeight: 440 }}>
@@ -48,19 +90,35 @@ export default function YearTable() {
               },
             }}
           >
-            <TableRow>
-              <Checkbox
-                color="primary"
-                checked={false}
-                onChange={() =>{}}
-              />
-              <TableCell align="right">d</TableCell>
-              <TableCell align="right">das</TableCell>
-              <TableCell align="right">das</TableCell>
-            </TableRow>
+            {TableData?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((i: TDataBaseFileName) => (
+              <TableRow key={i.id}>
+                <TableCell align="right">
+                  <Checkbox
+                    color="primary"
+                    checked={i.checked}
+                    onChange={() => {setChecked(i.id)}}
+                  />
+                </TableCell>
+                <TableCell align="right">{i.year}</TableCell>
+                <TableCell align="right">{i.description}</TableCell>
+                <TableCell align="right">{i.dbName}</TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </TableContainer>
+      <TablePagination
+        style={{ display: "flex" }}
+        dir="ltr"
+        rowsPerPageOptions={[10 , 25 , 50]}
+        labelRowsPerPage={``}
+        component="div"
+        count={Rows}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
     </Paper>
   );
 }
